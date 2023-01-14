@@ -1,0 +1,32 @@
+version: '2.1'
+services:
+  # https://docs.confluent.io/platform/current/installation/docker/config-reference.html#zk-configuration
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    network_mode: host
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=32181
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka:
+    image: confluentinc/cp-kafka:6.2.0
+    depends_on:
+      - zookeeper
+    network_mode: host
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=localhost:32181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:6.2.0
+    depends_on:
+      kafka:
+        condition: service_started
+    network_mode: host
+    environment:
+      - SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS=PLAINTEXT://localhost:29092
+      - SCHEMA_REGISTRY_HOST_NAME=localhost
+      - SCHEMA_REGISTRY_LISTENERS=http://localhost:8081
+      - SCHEMA_REGISTRY_DEBUG=true
